@@ -13,10 +13,10 @@ services:
 
   db:
     image: postgres:14
-    container_name: postgres
+    container_name: db
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: uL8XWdAg
       POSTGRES_DB: dbname
     volumes:
       - postgres_data:/var/lib/postgresql/data
