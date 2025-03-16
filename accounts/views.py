@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from allauth.socialaccount.providers.microsoft.views import MicrosoftGraphOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
+
+from config import settings
 from .models import Department, Faculty, UserProfile
 from rest_framework.response import Response
 from .serializers import (
@@ -90,7 +92,7 @@ class ProfileDetailView(generics.RetrieveAPIView):
 
 class MicrosoftLogin(SocialLoginView):
     adapter_class = MicrosoftGraphOAuth2Adapter
-    callback_url = "http://localhost:3000/api/auth/callback/microsoft-entra-id"
+    callback_url = settings.MICROSOFT_OAUTH_CALLBACK_URL
     client_class = OAuth2Client
 
     def get_response(self):

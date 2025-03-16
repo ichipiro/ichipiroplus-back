@@ -113,6 +113,11 @@ SOCIALACCOUNT_PROVIDERS = {
     },
 }
 
+MICROSOFT_OAUTH_CALLBACK_URL = env(
+    "MICROSOFT_OAUTH_CALLBACK_URL",
+    default="http://localhost:3000/api/auth/callback/microsoft-entra-id",
+)
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
