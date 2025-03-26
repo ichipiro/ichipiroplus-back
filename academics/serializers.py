@@ -33,6 +33,14 @@ class SyllabusSerializer(serializers.ModelSerializer):
         many=True, queryset=Schedule.objects.all(), write_only=True, source="schedules"
     )
 
+    departments = DepartmentSerializer(many=True, read_only=True)
+    department_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Department.objects.all(),
+        write_only=True,
+        source="departments",
+    )
+
     class Meta:
         model = Syllabus
         fields = [
@@ -41,38 +49,41 @@ class SyllabusSerializer(serializers.ModelSerializer):
             "units",
             "schedules",
             "schedule_ids",
+            "departments",
+            "department_ids",
             "instructor",
             "grade",
-            "type",
             "purpose",
             "goal",
-            "requirements",
             "is_required",
             "is_exam",
             "description",
             "eval_method",
             "textbook",
             "feedback",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "created_at",
+            "updated_at",
         ]
 
 
 class LectureSerializer(serializers.ModelSerializer):
     terms = TermSerializer(many=True, read_only=True)
-    departments = DepartmentSerializer(many=True, read_only=True)
+
     schedules = ScheduleSerializer(many=True, read_only=True)
     term_ids = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Term.objects.all(), write_only=True, source="terms"
-    )
-    department_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Department.objects.all(),
-        write_only=True,
-        source="departments",
     )
     schedule_ids = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Schedule.objects.all(), write_only=True, source="schedules"
     )
     # シラバスから必要な情報のみを取得
+    departments = DepartmentSerializer(
+        source="syllabus.departments", many=True, read_only=True
+    )
     is_required = serializers.BooleanField(
         source="syllabus.is_required", read_only=True, allow_null=True
     )
@@ -89,10 +100,8 @@ class LectureSerializer(serializers.ModelSerializer):
             "syllabus",
             "name",
             "terms",
-            "departments",
             "schedules",
             "term_ids",
-            "department_ids",
             "schedule_ids",
             "grade",
             "room",
@@ -100,6 +109,7 @@ class LectureSerializer(serializers.ModelSerializer):
             "is_required",
             "is_exam",
             "biko",
+            "departments",
             "is_public",
             "is_public_editable",
             "owner",

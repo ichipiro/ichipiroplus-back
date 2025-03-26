@@ -14,6 +14,11 @@ class SyllabusResource(resources.ModelResource):
         attribute="schedules",
         widget=ManyToManyWidget(Schedule, field="id", separator=";"),
     )
+    departments = fields.Field(
+        column_name="departments",
+        attribute="departments",
+        widget=ManyToManyWidget(Department, field="name", separator=";"),
+    )
 
     class Meta:
         model = Syllabus
@@ -27,7 +32,7 @@ class SyllabusResource(resources.ModelResource):
             "type",
             "purpose",
             "goal",
-            "requirements",
+            "departments",
             "is_required",
             "is_exam",
             "description",
@@ -46,11 +51,6 @@ class LectureResource(resources.ModelResource):
         attribute="terms",
         widget=ManyToManyWidget(Term, field="number", separator=";"),
     )
-    departments = fields.Field(
-        column_name="departments",
-        attribute="departments",
-        widget=ManyToManyWidget(Department, field="name", separator=";"),
-    )
     schedules = fields.Field(
         column_name="schedules",
         attribute="schedules",
@@ -64,7 +64,6 @@ class LectureResource(resources.ModelResource):
             "syllabus",
             "name",
             "terms",
-            "departments",
             "schedules",
             "grade",
             "room",
@@ -81,7 +80,7 @@ class LectureResource(resources.ModelResource):
 @admin.register(Lecture)
 class LectureAdmin(ImportExportModelAdmin):
     resource_class = LectureResource
-    filter_horizontal = ("terms", "departments", "schedules")
+    filter_horizontal = ("terms", "schedules")
 
 
 @admin.register(Term)

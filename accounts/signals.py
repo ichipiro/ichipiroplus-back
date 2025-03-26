@@ -27,11 +27,20 @@ def create_initial_data(sender, **kwargs):
             name="医用情報科学科", faculty=Faculty.objects.get(name="情報科学部")
         )
         Department.objects.update_or_create(
+            name="情報科学研究科", faculty=Faculty.objects.get(name="情報科学部")
+        )
+        Department.objects.update_or_create(
             name="国際学科", faculty=Faculty.objects.get(name="国際学部")
+        )
+        Department.objects.update_or_create(
+            name="国際学研究科", faculty=Faculty.objects.get(name="国際学部")
         )
         Department.objects.update_or_create(
             name="美術学科", faculty=Faculty.objects.get(name="芸術学部")
         )
         Department.objects.update_or_create(
             name="デザイン工芸学科", faculty=Faculty.objects.get(name="芸術学部")
+        )
+        Department.objects.update_or_create(
+            name="芸術学研究科", faculty=Faculty.objects.get(name="芸術学部")
         )

@@ -62,18 +62,22 @@ class Syllabus(models.Model):
     )
     instructor = models.CharField(max_length=300, verbose_name="担当教員", blank=True)
     grade = models.CharField(verbose_name="対象学年", blank=True)
-    type = models.CharField(verbose_name="講義形態", blank=True)
     purpose = models.TextField(verbose_name="講義の目的", blank=True)
     goal = models.TextField(verbose_name="到達目標", blank=True)
-    requirements = models.CharField(verbose_name="受講要件", blank=True)
     is_required = models.BooleanField(verbose_name="必修", default=False)
     is_exam = models.BooleanField(verbose_name="期末テスト", default=False)
     description = models.TextField(max_length=5000, blank=True, verbose_name="概要")
     eval_method = models.TextField(max_length=1000, blank=True, verbose_name="評価方法")
+    departments = models.ManyToManyField(
+        Department, related_name="syllabuses", verbose_name="履修可能学科"
+    )
     textbook = models.TextField(verbose_name="教科書等", blank=True)
     feedback = models.TextField(
         verbose_name="課題や試験に対するフィードバック", blank=True
     )
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="登録日時")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
 
     def __str__(self):
         return f"{self.id}-{self.name}"
@@ -99,9 +103,6 @@ class Lecture(models.Model):
     )
     name = models.CharField(max_length=200, verbose_name="講義名")  # 講義名
     room = models.CharField(max_length=50, blank=True, verbose_name="講義室")  # 講義室
-    departments = models.ManyToManyField(
-        Department, related_name="lectures", verbose_name="履修可能学科"
-    )
     terms = models.ManyToManyField(Term, related_name="lectures", verbose_name="ターム")
     grade = models.IntegerField(verbose_name="対象学年", default=1)
     schedules = models.ManyToManyField(
