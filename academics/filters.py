@@ -10,10 +10,12 @@ class LectureFilter(django_filters.FilterSet):
         queryset=Term.objects.all(),
         label="ターム",
     )
+    department = django_filters.NumberFilter(
+        field_name="syllabus__departments", lookup_expr="exact"
+    )
     departments = django_filters.ModelMultipleChoiceFilter(
-        field_name="departments__id",
+        field_name="syllabus__departments",
         queryset=Department.objects.all(),
-        label="学科",
     )
     schedules = django_filters.ModelMultipleChoiceFilter(
         field_name="schedules",
@@ -26,8 +28,8 @@ class LectureFilter(django_filters.FilterSet):
     time = django_filters.NumberFilter(
         field_name="schedules__time", lookup_expr="exact", label="時限"
     )
-    is_required = django_filters.BooleanFilter(label="必修")
-    is_exam = django_filters.BooleanFilter(label="期末テスト")
+    is_required = django_filters.BooleanFilter(field_name="syllabus__is_required")
+    is_exam = django_filters.BooleanFilter(field_name="syllabus__is_exam")
     min_grade = django_filters.NumberFilter(
         field_name="grade", lookup_expr="gte", label="最小学年"
     )

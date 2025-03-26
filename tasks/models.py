@@ -25,7 +25,9 @@ class Task(models.Model):
         blank=True,
     )
     title = models.CharField(max_length=30, verbose_name="タイトル")
-    description = models.CharField(max_length=300, verbose_name="詳細")
+    description = models.CharField(
+        max_length=300, verbose_name="詳細", blank=True, null=True
+    )
     due_date = models.DateTimeField(
         verbose_name="締め切り",
         blank=True,

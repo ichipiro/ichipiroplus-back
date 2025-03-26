@@ -44,9 +44,13 @@ class LectureViewSet(viewsets.ModelViewSet):
         base_query = Q(owner=user) | Q(is_public=True)
 
         # ユーザーの所属学科に関連する講義
-        dept_faculty_query = Q(departments=user.profile.department) & Q(
-            departments__faculty=user.profile.faculty
-        )
+        dept_faculty_query = (
+            Q(syllabus__isnull=False)
+            & Q(syllabus__departments=user.profile.department)
+            & Q(syllabus__departments__faculty=user.profile.faculty)
+        ) | Q(
+            syllabus__isnull=True
+        )  # シラバスがない講義はすべて表示
 
         return Lecture.objects.filter(base_query & dept_faculty_query).distinct()
 
