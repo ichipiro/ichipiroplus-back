@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "academics",
     "articles",
     "tasks",
+    "webpush",
 ]
 
 MIDDLEWARE = [
@@ -149,7 +150,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -203,6 +204,11 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+
+VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY")
+VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY")
+VAPID_CLAIMS_EMAIL = env("VAPID_CLAIMS_EMAIL", default="main@ichipiroplus.com")
 
 
 # Internationalization
