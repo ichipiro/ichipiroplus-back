@@ -1,0 +1,129 @@
+{% extends "admin/base_site.html" %} {% load static %} {% block content %}
+<div id="content-main">
+  <h1>通知の送信</h1>
+  <p class="help">
+    このフォームからプッシュ通知を送信できます。ユーザーの通知設定を考慮して配信されます。
+  </p>
+
+  <form method="post" class="notification-form">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+      <div class="form-row">
+        {{ form.title.errors }}
+        <label for="{{ form.title.id_for_label }}"
+          >{{ form.title.label }}</label
+        >
+        {{ form.title }}
+      </div>
+
+      <div class="form-row">
+        {{ form.body.errors }}
+        <label for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
+        {{ form.body }}
+      </div>
+
+      <div class="form-row">
+        {{ form.url.errors }}
+        <label for="{{ form.url.id_for_label }}">{{ form.url.label }}</label>
+        {{ form.url }}
+        <p class="help">
+          通知をクリックしたときに開くURLを指定します。指定しない場合はホームページが開きます。
+        </p>
+      </div>
+
+      <div class="form-row">
+        {{ form.notification_type.errors }}
+        <label>{{ form.notification_type.label }}</label>
+        <div class="radio-group">
+          {% for radio in form.notification_type %}
+          <div>{{ radio }}</div>
+          {% endfor %}
+        </div>
+        <p class="help">
+          通知の種類によって、ユーザーの通知設定が考慮されます。
+        </p>
+      </div>
+
+      <div class="form-row">
+        {{ form.recipient_type.errors }}
+        <label>{{ form.recipient_type.label }}</label>
+        <div class="radio-group">
+          {% for radio in form.recipient_type %}
+          <div>{{ radio }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="form-row" id="users-row">
+        {{ form.users.errors }}
+        <label for="{{ form.users.id_for_label }}"
+          >{{ form.users.label }}</label
+        >
+        {{ form.users }}
+        <p class="help">
+          「選択したユーザー」を選んだ場合に通知を送信するユーザーを選択してください。Ctrl/Cmdキーを押しながらクリックすると複数選択できます。
+        </p>
+      </div>
+    </fieldset>
+
+    <div class="submit-row">
+      <input type="submit" value="通知を送信" class="default" name="_send" />
+    </div>
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 送信先によってユーザー選択フィールドの表示・非表示を切り替え
+    function toggleUsersField() {
+      var selectedValue = document.querySelector(
+        'input[name="recipient_type"]:checked'
+      ).value;
+      var usersRow = document.getElementById("users-row");
+      if (selectedValue === "all") {
+        usersRow.style.display = "none";
+      } else {
+        usersRow.style.display = "block";
+      }
+    }
+
+    // 初期状態を設定
+    var radios = document.querySelectorAll('input[name="recipient_type"]');
+    toggleUsersField();
+
+    // イベントリスナーを追加
+    radios.forEach(function (radio) {
+      radio.addEventListener("change", toggleUsersField);
+    });
+  });
+</script>
+
+<style>
+  .notification-form .form-row {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+  }
+  .notification-form label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .notification-form .vTextField,
+  .notification-form .vLargeTextField {
+    width: 90%;
+  }
+  .notification-form .submit-row {
+    margin: 20px 0 0 0;
+    padding: 20px 10px;
+    text-align: right;
+  }
+  .notification-form .radio-group {
+    margin: 10px 0;
+  }
+  .notification-form .radio-group label {
+    font-weight: normal;
+    display: inline;
+    margin-right: 15px;
+  }
+</style>
+{% endblock %}

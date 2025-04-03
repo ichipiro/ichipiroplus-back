@@ -15,6 +15,7 @@ urlpatterns = [
                 path("tasks/", include("tasks.urls")),
                 # 記事関連
                 path("articles/", include("articles.urls")),
+                path("push/", include("webpush.urls")),
             ]
         ),
     ),
