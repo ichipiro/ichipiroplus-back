@@ -1,8 +1,9 @@
-from django.utils import timezone
+from django.shortcuts import get_object_or_404
 from rest_framework import generics
 import logging
 from academics.filters import RegistrationFilter, LectureFilter
-from .models import Lecture, Registration, Schedule, Term
+from .utils import get_current_term_and_year
+from .models import Lecture, Registration, Schedule
 from rest_framework import viewsets, permissions
 from .serializers import (
     LectureSerializer,
@@ -86,34 +87,60 @@ class ScheduleListView(generics.ListAPIView):
 
 class CurrentTermView(APIView):
     def get(self, request, *args, **kwargs):
-        today = timezone.now().date()
+        current_term, fiscal_year = get_current_term_and_year()
 
-        # 終了日が未来のタームを取得し、終了日が最も近いものを選択
-        current_term = (
-            Term.objects.filter(end_date__gte=today).order_by("end_date").first()
-        )
-
-        # 該当するタームがない場合、エラーを返す
         if not current_term:
             return Response(
                 {"error": "現在のタームが見つかりません。"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        end_date = current_term.end_date
-        fiscal_year = end_date.year
-
-        # 1月〜3月の場合は前年度として扱う
-        if end_date.month <= 3:
-            fiscal_year -= 1
-
         response_data = {
             "year": fiscal_year,
             "term": {
                 "number": current_term.number,
                 "name": str(current_term),
+                "start_date": current_term.start_date.isoformat(),
                 "end_date": current_term.end_date.isoformat(),
             },
         }
 
         return Response(response_data)
+
+
+class AttendanceView(APIView):
+    """
+    出席回数を管理するAPI
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, registration_id):
+        """
+        出席回数をインクリメントする
+        """
+        # 自分の登録情報のみ更新可能
+        registration = get_object_or_404(
+            Registration, id=registration_id, user=request.user
+        )
+
+        # 出席回数をインクリメント
+        registration.increment_attendance()
+
+        serializer = RegistrationSerializer(registration)
+        return Response(serializer.data)
+
+    def delete(self, request, registration_id):
+        """
+        出席回数をデクリメントする
+        """
+        # 自分の登録情報のみ更新可能
+        registration = get_object_or_404(
+            Registration, id=registration_id, user=request.user
+        )
+
+        # 出席回数をデクリメント
+        registration.decrement_attendance()
+
+        serializer = RegistrationSerializer(registration)
+        return Response(serializer.data)

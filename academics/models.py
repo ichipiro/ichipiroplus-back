@@ -11,6 +11,7 @@ class Term(models.Model):
     number = models.PositiveSmallIntegerField(
         choices=TERM_CHOICES, verbose_name="ターム", primary_key=True
     )
+    start_date = models.DateField(verbose_name="開始日", null=True, blank=True)
     end_date = models.DateField(verbose_name="終了日", null=True, blank=True)
 
     class Meta:
@@ -146,11 +147,26 @@ class Registration(models.Model):
         verbose_name="講義",
     )
     year = models.PositiveIntegerField(verbose_name="年度")
+    attendance_count = models.PositiveSmallIntegerField(
+        default=0, verbose_name="出席回数"
+    )
     registered_at = models.DateTimeField(auto_now_add=True, verbose_name="登録日時")
 
     class Meta:
         unique_together = ("user", "lecture", "year")
         verbose_name_plural = "登録状況"
+
+    def increment_attendance(self):
+        if self.attendance_count < 15:
+            self.attendance_count += 1
+            self.save()
+        return self.attendance_count
+
+    def decrement_attendance(self):
+        if self.attendance_count > 0:
+            self.attendance_count -= 1
+            self.save()
+        return self.attendance_count
 
     def __str__(self):
         return f"{self.user.profile.display_name} が {self.lecture.name} を {self.year}年  に登録"

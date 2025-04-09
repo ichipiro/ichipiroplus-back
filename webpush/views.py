@@ -1,4 +1,5 @@
 import base64
+import time
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from pywebpush import webpush, WebPushException
 import json
 from django.conf import settings
+import urllib
 from .models import PushSubscription, PushNotificationLog
 from .serializers import PushSubscriptionSerializer
 import logging
@@ -150,6 +152,12 @@ class UpdateNotificationSettingsView(APIView):
             )
 
 
+def get_audience_from_endpoint(endpoint):
+    parsed_url = urllib.parse.urlparse(endpoint)
+    audience = f"{parsed_url.scheme}://{parsed_url.netloc}"
+    return audience
+
+
 class TestPushNotificationView(APIView):
     """テスト通知を送信するAPI"""
 
@@ -158,88 +166,27 @@ class TestPushNotificationView(APIView):
     def post(self, request):
         """テスト通知を送信する"""
         try:
-            # ユーザーのすべてのサブスクリプションを取得
-            subscriptions = PushSubscription.objects.filter(user=request.user)
-
-            if not subscriptions:
-                return Response(
-                    {"error": "No subscriptions found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
-            # リクエストからパラメータを取得（オプション）
             title = request.data.get("title", "テスト通知")
             body = request.data.get(
                 "body", "これはバックエンドから送信されたテスト通知です"
             )
             url = request.data.get("url", "/notifications")
 
-            # 送信するデータ
-            payload = json.dumps({"title": title, "body": body, "url": url})
-
-            # VAPID情報の設定
-            vapid_claims = {"sub": f"mailto:{settings.VAPID_CLAIMS_EMAIL}"}
-
-            # 各サブスクリプションに通知を送信
-            sent_count = 0
-            errors = []
-
-            for subscription in subscriptions:
-                subscription_info = {
-                    "endpoint": subscription.endpoint,
-                    "keys": {"p256dh": subscription.p256dh, "auth": subscription.auth},
-                }
-
-                try:
-                    webpush(
-                        subscription_info=subscription_info,
-                        data=payload,
-                        vapid_private_key=settings.VAPID_PRIVATE_KEY,
-                        vapid_claims=vapid_claims,
-                    )
-                    sent_count += 1
-
-                    # 通知ログを保存
-                    PushNotificationLog.objects.create(
-                        user=request.user,
-                        title=title,
-                        body=body,
-                        url=url,
-                        notification_type="test",
-                        status="sent",
-                    )
-
-                except WebPushException as e:
-                    error_msg = str(e)
-                    errors.append(error_msg)
-
-                    # 無効なサブスクリプションの場合は削除
-                    if e.response and e.response.status_code in [404, 410]:
-                        subscription.delete()
-                        errors.append(
-                            f"Invalid subscription removed: {subscription.endpoint}"
-                        )
-
-                    logger.error(f"通知送信エラー: {error_msg}")
-
-                    # エラーログを保存
-                    PushNotificationLog.objects.create(
-                        user=request.user,
-                        title=title,
-                        body=body,
-                        url=url,
-                        notification_type="test",
-                        status="failed",
-                    )
-
-            return Response(
-                {
-                    "success": True,
-                    "sent": sent_count,
-                    "errors": errors if errors else None,
-                },
-                status=status.HTTP_200_OK,
+            result = send_push_notification(
+                user=request.user,
+                title=title,
+                body=body,
+                url=url,
+                notification_type="test",
             )
+
+            response_data = {
+                "success": result["success"] > 0,
+                "sent": result["success"],
+                "errors": result["errors"] if result["errors"] else None,
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
             logger.error(f"テスト通知エラー: {str(e)}")
@@ -285,14 +232,17 @@ def send_push_notification(user, title, body, url=None, notification_type="gener
             {"title": title, "body": body, "url": url or "/", "type": notification_type}
         )
 
-        # VAPID情報の設定
-        vapid_claims = {"sub": f"mailto:{settings.VAPID_CLAIMS_EMAIL}"}
-
         # 各サブスクリプションに通知を送信
         for subscription in subscriptions:
             subscription_info = {
                 "endpoint": subscription.endpoint,
                 "keys": {"p256dh": subscription.p256dh, "auth": subscription.auth},
+            }
+
+            vapid_claims = {
+                "sub": f"mailto:{settings.VAPID_CLAIMS_EMAIL}",
+                "exp": int(time.time()) + 12 * 60 * 60,  # 有効期限を12時間に設定
+                "aud": get_audience_from_endpoint(subscription.endpoint),
             }
 
             try:
@@ -301,7 +251,7 @@ def send_push_notification(user, title, body, url=None, notification_type="gener
                     data=payload,
                     vapid_private_key=settings.VAPID_PRIVATE_KEY,
                     vapid_claims=vapid_claims,
-                    ttl=60 * 60 * 24,
+                    ttl=60 * 60 * 12,
                 )
                 results["success"] += 1
 
@@ -316,6 +266,7 @@ def send_push_notification(user, title, body, url=None, notification_type="gener
                 )
 
             except WebPushException as e:
+                logger.error(e)
                 error_msg = str(e)
                 results["failed"] += 1
                 results["errors"].append(error_msg)
