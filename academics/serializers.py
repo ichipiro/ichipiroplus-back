@@ -145,8 +145,15 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Registration
-        fields = ["id", "lecture", "lecture_id", "year", "registered_at"]
-        read_only_fields = ["registered_at"]
+        fields = [
+            "id",
+            "lecture",
+            "lecture_id",
+            "year",
+            "registered_at",
+            "attendance_count",
+        ]
+        read_only_fields = ["registered_at", "attendance_count"]
 
     def validate(self, data):
         user = self.context["request"].user

@@ -85,7 +85,7 @@ class LectureAdmin(ImportExportModelAdmin):
 
 @admin.register(Term)
 class TermAdmin(admin.ModelAdmin):
-    list_display = ("number", "end_date")
+    list_display = ("number", "start_date", "end_date")
 
 
 @admin.register(Syllabus)
@@ -96,5 +96,5 @@ class SyllabusAdmin(ImportExportModelAdmin):
 
 @admin.register(Registration)
 class RegistrationAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "lecture", "registered_at")
+    list_display = ("id", "user", "lecture", "attendance_count", "registered_at")
     date_hierarchy = "registered_at"
