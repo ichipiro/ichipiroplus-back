@@ -273,7 +273,8 @@ def send_push_notification(user, title, body, url=None, notification_type="gener
 
                 # 無効なサブスクリプションの場合は削除
                 if e.response and e.response.status_code in [404, 410]:
-                    subscription.delete()
+                    deleted = subscription.delete()
+                    logger.info(f"Delete result: {deleted}")
                     results["errors"].append(
                         f"Invalid subscription removed: {subscription.endpoint}"
                     )
